@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Cat Translator 🐱</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0a0a0f; --bg2: #111118; --bg3: #18181f; --bg4: #1e1e28;
+  --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.12);
+  --text: #f0eef8; --text2: #9b97b0; --text3: #5a5670;
+  --accent: #c084fc; --accent2: #a855f7; --accent-glow: rgba(192,132,252,0.15);
+  --green: #4ade80; --green-bg: rgba(74,222,128,0.08);
+  --red: #f87171; --red-bg: rgba(248,113,113,0.08);
+}
+body {
+  font-family: 'Syne', sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; padding: 2rem 1rem 4rem;
+  position: relative; overflow-x: hidden;
+}
+body::before {
+  content: ''; position: fixed; top: -200px; left: 50%;
+  transform: translateX(-50%); width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(168,85,247,0.08) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+.container { max-width: 460px; margin: 0 auto; position: relative; z-index: 1; }
+header { text-align: center; margin-bottom: 2.5rem; animation: fadeDown 0.7s ease both; }
+.cat-emoji { font-size: 72px; display: block; animation: float 3s ease-in-out infinite; filter: drop-shadow(0 0 20px rgba(192,132,252,0.4)); }
+@keyframes float { 0%,100%{transform:translateY(0) rotate(-2deg);} 50%{transform:translateY(-8px) rotate(2deg);} }
+h1 { font-family: 'Instrument Serif', serif; font-size: 2.6rem; font-weight: 400; font-style: italic; letter-spacing: -0.02em; background: linear-gradient(135deg, #f0eef8 0%, #c084fc 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.1; margin-bottom: 6px; }
+.tagline { font-size: 13px; color: var(--text3); font-weight: 400; letter-spacing: 0.05em; text-transform: uppercase; }
+@keyframes fadeDown { from{opacity:0;transform:translateY(-20px);} to{opacity:1;transform:translateY(0);} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: 20px; padding: 1.5rem; margin-bottom: 12px; animation: fadeUp 0.5s ease both; transition: border-color 0.2s; }
+.card:hover { border-color: var(--border2); }
+.card:nth-child(1){animation-delay:0.05s;} .card:nth-child(2){animation-delay:0.1s;}
+.section-label { font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); margin-bottom: 14px; }
+.record-btn { width: 100%; padding: 16px 20px; border-radius: 14px; border: 1px solid var(--border2); background: var(--bg3); color: var(--text); font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 400; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s; }
+.record-btn:hover { background: var(--bg4); border-color: var(--accent2); box-shadow: 0 0 20px var(--accent-glow); }
+.record-btn.recording { background: var(--red-bg); border-color: var(--red); color: var(--red); animation: recPulse 1.2s ease-in-out infinite; }
+@keyframes recPulse { 0%,100%{box-shadow:0 0 0 0 rgba(248,113,113,0.2);} 50%{box-shadow:0 0 0 8px rgba(248,113,113,0);} }
+.rec-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--red); animation: blink 1s infinite; flex-shrink: 0; }
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.15;} }
+.status-msg { margin-top: 10px; padding: 10px 14px; border-radius: 10px; font-size: 13px; text-align: center; line-height: 1.5; display: none; }
+.status-msg.rec-active { display:block; background:var(--red-bg); color:var(--red); border:1px solid rgba(248,113,113,0.2); }
+.status-msg.rec-done { display:block; background:var(--green-bg); color:var(--green); border:1px solid rgba(74,222,128,0.2); }
+.countdown-wrap { display:none; justify-content:center; margin-top:14px; }
+.countdown-wrap.visible { display:flex; }
+.countdown-circle { position:relative; width:70px; height:70px; }
+.countdown-circle svg { position:absolute; top:0; left:0; transform:rotate(-90deg); }
+.countdown-num { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:'Instrument Serif',serif; font-size:24px; font-style:italic; color:var(--red); }
+audio { width:100%; margin-top:12px; display:none; border-radius:8px; filter: invert(1) hue-rotate(180deg); }
+.translate-btn { width:100%; padding:14px; border-radius:14px; border: 1px solid var(--accent2); background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(192,132,252,0.08)); color: var(--accent); font-family:'Syne',sans-serif; font-size:15px; font-weight:500; cursor:pointer; margin-top:12px; display:none; transition: all 0.2s; }
+.translate-btn:hover { background: linear-gradient(135deg, rgba(168,85,247,0.25), rgba(192,132,252,0.15)); box-shadow: 0 0 24px var(--accent-glow); }
+.translate-btn:active { transform:scale(0.98); }
+.upload-area { border: 1px dashed var(--border2); border-radius: 14px; padding: 1.75rem; text-align: center; cursor: pointer; transition: all 0.2s; }
+.upload-area:hover { background: var(--bg3); border-color: var(--accent2); }
+.upload-area .icon { font-size: 28px; margin-bottom: 8px; }
+.upload-area p { font-size: 14px; color: var(--text2); }
+.upload-area small { font-size: 12px; color: var(--text3); }
+#file-input { display:none; }
+.filename { font-size:13px; color:var(--text2); text-align:center; margin-top:8px; }
+.analyzing { text-align:center; padding:2rem; display:none; }
+.paw-loader { font-size:36px; display:inline-block; animation:spin 1s linear infinite; filter:drop-shadow(0 0 12px var(--accent)); }
+@keyframes spin { to{transform:rotate(360deg);} }
+.analyzing p { font-size:14px; color:var(--text2); margin-top:12px; }
+.result-card { background: var(--bg2); border: 1px solid rgba(168,85,247,0.25); border-radius: 20px; padding: 2rem 1.75rem; margin-top: 12px; display: none; text-align: center; animation: fadeUp 0.5s ease both; box-shadow: 0 0 40px rgba(168,85,247,0.08); }
+.result-emoji-big { font-size:60px; margin-bottom:14px; display:block; filter:drop-shadow(0 0 16px rgba(192,132,252,0.3)); animation:float 3s ease-in-out infinite; }
+.result-title { font-family:'Instrument Serif',serif; font-size:1.6rem; font-weight:400; font-style:italic; color:var(--text); margin-bottom:10px; line-height:1.2; }
+.result-desc { font-size:14px; color:var(--text2); line-height:1.75; margin-bottom:1rem; font-weight:400; }
+.result-tip { font-size:13px; color:var(--green); background:var(--green-bg); border:1px solid rgba(74,222,128,0.15); border-radius:12px; padding:12px 16px; margin-bottom:1.25rem; line-height:1.6; text-align:left; }
+.again-btn { width:100%; padding:12px; border-radius:12px; border:1px solid var(--border2); background:transparent; color:var(--text2); font-family:'Syne',sans-serif; font-size:14px; cursor:pointer; transition:all 0.2s; }
+.again-btn:hover { background:var(--bg3); color:var(--text); }
+.error-msg { background:var(--red-bg); color:var(--red); border:1px solid rgba(248,113,113,0.2); border-radius:14px; padding:14px 16px; font-size:13px; line-height:1.6; margin-top:12px; display:none; text-align:center; }
+footer { text-align:center; margin-top:2.5rem; font-size:12px; color:var(--text3); letter-spacing:0.03em; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <span class="cat-emoji">🐱</span>
+    <h1>Cat Translator</h1>
+    <p class="tagline">What is your cat really saying?</p>
+  </header>
+
+  <div class="card">
+    <p class="section-label">Record live</p>
+    <button class="record-btn" id="record-btn" onclick="toggleRecord()">
+      <span id="record-icon">🎙️</span>
+      <span id="record-text">Click to start recording</span>
+    </button>
+    <div class="status-msg" id="status-msg"></div>
+    <div class="countdown-wrap" id="countdown-wrap">
+      <div class="countdown-circle">
+        <svg width="70" height="70" viewBox="0 0 70 70">
+          <circle cx="35" cy="35" r="28" fill="none" stroke="rgba(248,113,113,0.2)" stroke-width="4"/>
+          <circle id="ring" cx="35" cy="35" r="28" fill="none" stroke="#f87171" stroke-width="4"
+            stroke-dasharray="175.9" stroke-dashoffset="0" stroke-linecap="round"
+            style="transition:stroke-dashoffset 1s linear;"/>
+        </svg>
+        <div class="countdown-num" id="countdown-num">10</div>
+      </div>
+    </div>
+    <audio id="audio-preview" controls></audio>
+    <button class="translate-btn" id="translate-rec" onclick="analyzeRecording()">Translate with AI ✦</button>
+  </div>
+
+  <div class="card">
+    <p class="section-label">Upload a file</p>
+    <div class="upload-area" onclick="document.getElementById('file-input').click()">
+      <div class="icon">📂</div>
+      <p>Click to choose an audio file</p>
+      <small>MP3, WAV, M4A, OGG supported</small>
+    </div>
+    <input type="file" id="file-input" accept="audio/*" onchange="handleUpload(event)"/>
+    <p class="filename" id="filename"></p>
+    <button class="translate-btn" id="translate-file" onclick="analyzeFile()">Translate with AI ✦</button>
+  </div>
+
+  <div class="analyzing" id="analyzing">
+    <div class="paw-loader">🐾</div>
+    <p id="analyzing-text">AI is listening to your cat...</p>
+  </div>
+
+  <div class="error-msg" id="error-msg"></div>
+
+  <div class="result-card" id="result-card">
+    <span class="result-emoji-big" id="result-emoji"></span>
+    <p class="result-title" id="result-title"></p>
+    <p class="result-desc" id="result-desc"></p>
+    <div class="result-tip" id="result-tip"></div>
+    <button class="again-btn" onclick="resetAll()">Try another sound</button>
+  </div>
+
+  <footer>Made with ❤️ for cat lovers</footer>
+</div>
+
+<script>
+let mediaRecorder, audioChunks = [], recTimer, secs = 0, isRecording = false;
+let recordedBlob = null, uploadedFile = null;
+const MAX = 10, CIRC = 175.9;
+
+function setStatus(type, msg) {
+  const el = document.getElementById('status-msg');
+  el.className = 'status-msg ' + type;
+  el.textContent = msg;
+}
+
+function toggleRecord() { isRecording ? stopRecording() : startRecording(); }
+
+async function startRecording() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioChunks = []; recordedBlob = null;
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    mediaRecorder.onstop = () => {
+      recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+      const url = URL.createObjectURL(recordedBlob);
+      const ap = document.getElementById('audio-preview');
+      ap.src = url; ap.style.display = 'block';
+      document.getElementById('translate-rec').style.display = 'block';
+      setStatus('rec-done', '✅ Recording saved! Click "Translate with AI" below.');
+      stream.getTracks().forEach(t => t.stop());
+    };
+    mediaRecorder.start();
+    isRecording = true; secs = 0;
+    document.getElementById('record-btn').classList.add('recording');
+    document.getElementById('record-btn').innerHTML = '<span class="rec-dot"></span><span>Recording... click to stop</span>';
+    document.getElementById('countdown-wrap').classList.add('visible');
+    document.getElementById('audio-preview').style.display = 'none';
+    document.getElementById('translate-rec').style.display = 'none';
+    setStatus('rec-active', '🔴 Let your cat meow near the mic!');
+    updateRing(0);
+    recTimer = setInterval(() => {
+      secs++;
+      document.getElementById('countdown-num').textContent = MAX - secs;
+      updateRing(secs);
+      if (secs >= MAX) stopRecording();
+    }, 1000);
+  } catch(e) {
+    setStatus('rec-active', '⚠️ Mic access denied. Please allow microphone in browser settings.');
+  }
+}
+
+function stopRecording() {
+  clearInterval(recTimer); isRecording = false;
+  if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+  document.getElementById('record-btn').classList.remove('recording');
+  document.getElementById('record-btn').innerHTML = '<span>🎙️</span><span>Record again</span>';
+  document.getElementById('countdown-wrap').classList.remove('visible');
+  document.getElementById('countdown-num').textContent = MAX;
+  document.getElementById('ring').style.strokeDashoffset = 0;
+}
+
+function updateRing(s) {
+  document.getElementById('ring').style.strokeDashoffset = CIRC * (s / MAX);
+}
+
+function handleUpload(e) {
+  uploadedFile = e.target.files[0];
+  if (!uploadedFile) return;
+  document.getElementById('filename').textContent = '📄 ' + uploadedFile.name;
+  document.getElementById('translate-file').style.display = 'block';
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+function analyzeRecording() { if (recordedBlob) runAI(recordedBlob, 'audio/webm'); }
+function analyzeFile() { if (uploadedFile) runAI(uploadedFile, uploadedFile.type || 'audio/mpeg'); }
+
+async function runAI(audioBlob, mimeType) {
+  document.getElementById('analyzing').style.display = 'block';
+  document.getElementById('result-card').style.display = 'none';
+  document.getElementById('error-msg').style.display = 'none';
+
+  const steps = ['Converting audio...', 'AI is listening carefully...', 'Analysing cat sounds...', 'Translating cat language...'];
+  let step = 0;
+  const stepTimer = setInterval(() => {
+    if (step < steps.length - 1) step++;
+    document.getElementById('analyzing-text').textContent = steps[step];
+  }, 1200);
+
+  try {
+    const audioBase64 = await blobToBase64(audioBlob);
+
+    // ✅ Calls YOUR backend — API key never touches the browser
+    const response = await fetch('/api/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ audioBase64, mimeType })
+    });
+
+    clearInterval(stepTimer);
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || 'Server error ' + response.status);
+    }
+
+    const result = await response.json();
+
+    document.getElementById('analyzing').style.display = 'none';
+    document.getElementById('result-emoji').textContent = result.emoji;
+    document.getElementById('result-title').textContent = result.title;
+    document.getElementById('result-desc').textContent = result.description;
+    document.getElementById('result-tip').textContent = '💡 ' + result.tip;
+    document.getElementById('result-card').style.display = 'block';
+    document.getElementById('result-card').scrollIntoView({ behavior: 'smooth' });
+
+  } catch(e) {
+    clearInterval(stepTimer);
+    document.getElementById('analyzing').style.display = 'none';
+    showError('Something went wrong: ' + e.message);
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function resetAll() {
+  recordedBlob = null; uploadedFile = null;
+  document.getElementById('result-card').style.display = 'none';
+  document.getElementById('error-msg').style.display = 'none';
+  document.getElementById('audio-preview').style.display = 'none';
+  document.getElementById('audio-preview').src = '';
+  document.getElementById('translate-rec').style.display = 'none';
+  document.getElementById('translate-file').style.display = 'none';
+  document.getElementById('filename').textContent = '';
+  document.getElementById('file-input').value = '';
+  document.getElementById('record-btn').innerHTML = '<span>🎙️</span><span>Click to start recording</span>';
+  document.getElementById('status-msg').className = 'status-msg';
+}
+</script>
+</body>
+</html>
